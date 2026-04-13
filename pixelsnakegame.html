@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Snake Game</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+}
+
+#menu, #gameOver {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 18px;
+    border: none;
+    border-radius: 8px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+canvas {
+    display: none;
+    margin: auto;
+    margin-top: 20px;
+    border: 2px solid #555;
+
+    /* 🎨 Background image */
+    background-image: url("https://imgs.search.brave.com/h3-EmWC8nMOdHYeroQlDX-4ew6pnpp9bfXY3epsW-EU/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFnZXMuZnJlZWNyZWF0aXZlcy5jb20vd3AtY29udGVudC91cGxvYWRzLzIwMTYvMDIvY2hlY2tlcmVkLXJvb20tYmFja2dyb3VuZC5qcGc");
+
+    background-size: cover;
+    background-position: center;
+}
+</style>
+
+</head>
+<body>
+
+<div id="menu">
+    <h1>🐍 Snake Game</h1>
+    <button onclick="startGame()">Play</button>
+</div>
+
+<div id="gameOver" style="display:none;">
+    <h1>Game Over</h1>
+    <p id="scoreText"></p>
+    <button onclick="restartGame()">Restart</button>
+</div>
+
+<canvas id="gameCanvas" width="400" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const gridSize = 20;
+let snake, direction, apple, score, gameInterval;
+
+// 🍎 Minecraft apple image
+const appleImg = new Image();
+appleImg.src = "https://minecraft.wiki/images/Apple_JE1_BE1.png?a9deb&20201102053742";
+
+function startGame() {
+    document.getElementById("menu").style.display = "none";
+    canvas.style.display = "block";
+
+    snake = [{x: 10, y: 10}];
+    direction = "RIGHT";
+    score = 0;
+
+    spawnApple();
+
+    gameInterval = setInterval(gameLoop, 120);
+}
+
+function restartGame() {
+    document.getElementById("gameOver").style.display = "none";
+    startGame();
+}
+
+function spawnApple() {
+    apple = {
+        x: Math.floor(Math.random() * 20),
+        y: Math.floor(Math.random() * 20)
+    };
+}
+
+function gameLoop() {
+    update();
+    draw();
+}
+
+function update() {
+    let head = { ...snake[0] };
+
+    if (direction === "UP") head.y--;
+    if (direction === "DOWN") head.y++;
+    if (direction === "LEFT") head.x--;
+    if (direction === "RIGHT") head.x++;
+
+    // Wall collision
+    if (head.x < 0 || head.y < 0 || head.x >= 20 || head.y >= 20) {
+        return gameOver();
+    }
+
+    // Self collision
+    for (let part of snake) {
+        if (part.x === head.x && part.y === head.y) {
+            return gameOver();
+        }
+    }
+
+    snake.unshift(head);
+
+    // Eat apple
+    if (head.x === apple.x && head.y === apple.y) {
+        score++;
+        spawnApple();
+    } else {
+        snake.pop();
+    }
+}
+
+function draw() {
+    // ✅ Clear canvas so background shows through
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw snake
+    ctx.fillStyle = "#4CAF50";
+    snake.forEach(part => {
+        ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+    });
+
+    // Draw apple image
+    ctx.drawImage(
+        appleImg,
+        apple.x * gridSize,
+        apple.y * gridSize,
+        gridSize,
+        gridSize
+    );
+}
+
+function gameOver() {
+    clearInterval(gameInterval);
+    canvas.style.display = "none";
+    document.getElementById("gameOver").style.display = "flex";
+    document.getElementById("scoreText").innerText = "Score: " + score;
+}
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+    if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+    if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+</script>
+
+</body>
+</html>
